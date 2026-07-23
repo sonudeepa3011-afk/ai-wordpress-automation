@@ -2,44 +2,42 @@ from modules.rss import get_latest_posts
 from modules.scraper import get_article_content
 from modules.ai import rewrite_article
 from modules.wordpress import create_draft
+from modules.duplicate import is_duplicate
 
 RSS_URL = "https://www.karmasandhan.com/feed/"
 
-print("Loading RSS Feed...")
-
-posts = get_latest_posts(RSS_URL, limit=1)
+posts = get_latest_posts(RSS_URL, limit=5)
 
 print("Posts Found:", len(posts))
 
-if not posts:
-    raise Exception("RSS Feed returned no posts.")
+for post in posts:
 
-post = posts[0]
+    print("=" * 50)
+    print("Title:", post["title"])
 
-print("Title:", post["title"])
+    # Duplicate Check
+    if is_duplicate(post["title"]):
+        print("⏭ Duplicate Found - Skipping")
+        continue
 
-print("Fetching Article...")
-content = get_article_content(post["link"])
+    print("✅ New Post")
 
-print("Content Length:", len(content))
+    print("Fetching Article...")
+    content = get_article_content(post["link"])
 
-print("Rewriting with Gemini AI...")
-article = rewrite_article(
-    post["title"],
-    content
-)
+    print("Content Length:", len(content))
 
-print("AI Rewrite Completed")
+    print("Rewriting with Gemini...")
+    article = rewrite_article(
+        post["title"],
+        content
+    )
 
-print("Creating WordPress Draft...")
+    print("Creating Draft...")
 
-draft = create_draft(
-    post["title"],
-    article
-)
+    draft = create_draft(
+        post["title"],
+        article
+    )
 
-print("====================================")
-print("✅ Draft Created Successfully")
-print("Draft ID:", draft["id"])
-print("Draft Link:", draft["link"])
-print("====================================")
+    print("✅ Draft Created:", draft["id"])
