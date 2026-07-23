@@ -1,55 +1,22 @@
-import feedparser
-
-feed_url = "https://www.karmasandhan.com/feed/"
-
-feed = feedparser.parse(feed_url)
-
-print("Total Posts:", len(feed.entries))
-
-for post in feed.entries[:10]:
-    print("TITLE :", post.title)
-    print("LINK  :", post.link)
-    print("-" * 50)
-import requests
-from bs4 import BeautifulSoup
-
-first_post = feed.entries[0].link
-
-print("\nOpening:", first_post)
-
-response = requests.get(first_post, headers={"User-Agent":"Mozilla/5.0"})
-
-soup = BeautifulSoup(response.text, "html.parser")
-
-content = soup.find("article")
-from google import genai
 import os
+import requests
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+wp_url = os.getenv("WP_URL")
+wp_user = os.getenv("WP_USERNAME")
+wp_pass = os.getenv("WP_APP_PASSWORD")
 
-prompt = f"""
-Rewrite this article completely.
+url = f"{wp_url}/wp-json/wp/v2/users/me"
 
-Rules:
-- 100% unique
-- SEO Friendly
-- Human written
-- Keep facts same
-- Create new title
-- Create headings
-- No plagiarism
+response = requests.get(url, auth=(wp_user, wp_pass))
 
-Article:
-{content.get_text(" ", strip=True)}
-"""
+print("Status Code:", response.status_code)
 
-response = client.models.generate_content(
-    model="gemini-flash-latest",
-    contents=prompt
-)
-
-print("\n========== AI ARTICLE ==========\n")
-print(response.text[:5000])
+if response.status_code == 200:
+    print("✅ WordPress Connected Successfully")
+    print(response.json()["name"])
+else:
+    print("❌ Connection Failed")
+    print(response.text)
 
 if content:
     print(content.get_text(" ", strip=True)[:3000])
