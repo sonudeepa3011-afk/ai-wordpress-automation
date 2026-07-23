@@ -1,21 +1,24 @@
 from modules.rss import get_latest_posts
 from modules.scraper import get_article_content
+from modules.ai import rewrite_article
 
 RSS_FEEDS = [
     "https://www.karmasandhan.com/feed/",
 ]
 
-for feed in RSS_FEEDS:
+posts = get_latest_posts(RSS_FEEDS[0], limit=1)
 
-    posts = get_latest_posts(feed, limit=1)
+post = posts[0]
 
-    for post in posts:
+print("Fetching Article...")
 
-        print("TITLE :", post["title"])
-        print("LINK  :", post["link"])
+content = get_article_content(post["link"])
 
-        print("\nFetching Article...\n")
+print("Rewriting with AI...")
 
-        content = get_article_content(post["link"])
+article = rewrite_article(
+    post["title"],
+    content
+)
 
-        print(content[:3000])
+print(article)
