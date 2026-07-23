@@ -3,35 +3,41 @@ from modules.scraper import get_article_content
 from modules.ai import rewrite_article
 from modules.wordpress import create_draft
 from modules.duplicate import is_duplicate
+from modules.state import already_processed, mark_processed
 
 RSS_URL = "https://www.karmasandhan.com/feed/"
 
-posts = get_latest_posts(RSS_URL, limit=5)
+posts = get_latest_posts(RSS_URL, limit=1)
 
 print("Posts Found:", len(posts))
 
 for post in posts:
 
-    print("=" * 50)
+    print("=" * 60)
     print("Title:", post["title"])
 
-    # Duplicate Check
-    if is_duplicate(post["title"]):
-        print("⏭ Duplicate Found - Skipping")
+    # Check processed.json
+    if already_processed(post["link"]):
+        print("⏭ Already Processed (State File)")
         continue
 
-    print("✅ New Post")
+    # Check WordPress
+    if is_duplicate(post["title"]):
+        print("⏭ Duplicate in WordPress")
+        mark_processed(post["link"])
+        continue
 
     print("Fetching Article...")
     content = get_article_content(post["link"])
 
     print("Content Length:", len(content))
 
-    print("Rewriting with Gemini...")
-    article = rewrite_article(
-        post["title"],
-        content
-    )
+    try:
+        print("Rewriting with Gemini...")
+        article = rewrite_article(post["title"], content)
+    except Exception as e:
+        print("Gemini Error:", e)
+        continue
 
     print("Creating Draft...")
 
@@ -41,3 +47,8 @@ for post in posts:
     )
 
     print("✅ Draft Created:", draft["id"])
+
+    # Save processed link
+    mark_processed(post["link"])
+
+    print("✅ Saved to processed.json")
