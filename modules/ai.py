@@ -2,34 +2,27 @@ import os
 import time
 from google import genai
 
-
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
-
 PROMPT = """
 You are a professional news writer.
 
-Rewrite the given article completely.
+Rewrite the following news article.
 
 Rules:
-
-- 100% unique content
+- 100% unique
 - Human written
 - SEO optimized
 - Google Discover friendly
-- Mobile friendly
-- Do not copy sentences
-- Keep all important facts
-- Use simple English
-- Create a catchy introduction
-- Use proper H2 and H3 headings
-- Use short paragraphs
-- No horizontal lines
+- Keep all facts
+- Simple English
+- Proper H2 and H3 headings
+- Short paragraphs
 - No promotional text
 - No source website name
-- End with a short conclusion
+- End with a conclusion
 
 Title:
 {title}
@@ -40,6 +33,10 @@ Article:
 
 
 def rewrite_article(title, content):
+
+    # Prevent very large prompts
+    if len(content) > 12000:
+        content = content[:12000]
 
     prompt = PROMPT.format(
         title=title,
@@ -55,7 +52,10 @@ def rewrite_article(title, content):
                 contents=prompt
             )
 
-            article = response.text.strip()
+            article = ""
+
+            if hasattr(response, "text") and response.text:
+                article = response.text.strip()
 
             if len(article) < 500:
                 raise Exception("Generated article too short.")
@@ -71,9 +71,9 @@ def rewrite_article(title, content):
 
             error = str(e).lower()
 
+            # Stop immediately if quota exceeded
             if "429" in error or "resource_exhausted" in error:
-                print("⚠ Gemini quota exceeded.")
-                break
+                raise Exception("Gemini quota exceeded.")
 
             if attempt < 3:
                 print("Retrying in 5 seconds...")
