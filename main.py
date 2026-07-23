@@ -1,11 +1,31 @@
-import os
-from google import genai
+import requests
+from bs4 import BeautifulSoup
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+url = "https://karmasandhan.com"
 
-response = client.models.generate_content(
-    model="gemini-flash-latest",
-    contents="Write a 50-word news about AI in simple English."
-)
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
 
-print(response.text)
+response = requests.get(url, headers=headers)
+
+print("Status:", response.status_code)
+
+soup = BeautifulSoup(response.text, "html.parser")
+
+links = soup.find_all("a")
+
+count = 0
+
+for link in links:
+    title = link.get_text(strip=True)
+    href = link.get("href")
+
+    if title and href and href.startswith("http"):
+        print(title)
+        print(href)
+        print("-------------------------")
+        count += 1
+
+    if count == 10:
+        break
