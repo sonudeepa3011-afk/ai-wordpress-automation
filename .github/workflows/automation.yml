@@ -20,6 +20,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Script
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python main.py
+  env:
+    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    WP_URL: ${{ secrets.WP_URL }}
+    WP_USERNAME: ${{ secrets.WP_USERNAME }}
+    WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+  run: python main.py
