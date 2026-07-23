@@ -1,28 +1,57 @@
 import os
+import re
 import requests
+from requests.auth import HTTPBasicAuth
+
+
+WP_URL = os.getenv("WP_URL")
+WP_USERNAME = os.getenv("WP_USERNAME")
+WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
+
+POST_STATUS = os.getenv("POST_STATUS", "draft")
+DEFAULT_CATEGORY = int(os.getenv("DEFAULT_CATEGORY", "1"))
+
+
+def slugify(text):
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s-]", "", text)
+    text = re.sub(r"\s+", "-", text)
+    text = re.sub(r"-+", "-", text)
+    return text.strip("-")
 
 
 def create_draft(title, content):
-    wp_url = os.getenv("WP_URL")
-    wp_user = os.getenv("WP_USERNAME")
-    wp_pass = os.getenv("WP_APP_PASSWORD")
+
+    if not WP_URL:
+        raise Exception("WP_URL missing")
+
+    endpoint = WP_URL.rstrip("/") + "/wp-json/wp/v2/posts"
+
+    excerpt = content[:250]
 
     data = {
         "title": title,
         "content": content,
-        "status": "draft"
+        "status": POST_STATUS,
+        "slug": slugify(title),
+        "excerpt": excerpt,
+        "categories": [DEFAULT_CATEGORY],
     }
 
     response = requests.post(
-        f"{wp_url}/wp-json/wp/v2/posts",
-        auth=(wp_user, wp_pass),
+        endpoint,
         json=data,
-        timeout=30
+        auth=HTTPBasicAuth(
+            WP_USERNAME,
+            WP_APP_PASSWORD
+        ),
+        timeout=60
     )
 
-    print("Status Code:", response.status_code)
-    print(response.text)
-
-    response.raise_for_status()
+    if response.status_code not in (200, 201):
+        print(response.text)
+        raise Exception(
+            f"WordPress Error {response.status_code}"
+        )
 
     return response.json()
