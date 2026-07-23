@@ -2,32 +2,26 @@ from modules.rss import get_latest_posts
 from modules.scraper import get_article_content
 from modules.ai import rewrite_article
 
-RSS_FEEDS = [
-    "https://www.karmasandhan.com/feed/",
-]
+RSS_URL = "https://www.karmasandhan.com/feed/"
 
-print("Reading:", RSS_FEEDS[0])
+posts = get_latest_posts(RSS_URL, limit=1)
 
-posts = get_latest_posts(RSS_FEEDS[0], limit=1)
+print("Posts:", len(posts))
 
-print("Posts:", posts)
-print("Count:", len(posts))
+if len(posts) == 0:
+    raise Exception("RSS returned no posts.")
 
-if not posts:
-    raise Exception("No posts found.")
-
-# First post select
 post = posts[0]
 
-print("Fetching Article...")
+print("Title:", post["title"])
+print("Fetching article...")
 
 content = get_article_content(post["link"])
 
-print("Rewriting with AI...")
+print("Article Length:", len(content))
 
-article = rewrite_article(
-    post["title"],
-    content
-)
+print("Rewriting article...")
+
+article = rewrite_article(post["title"], content)
 
 print(article)
