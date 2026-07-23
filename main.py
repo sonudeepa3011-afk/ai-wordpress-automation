@@ -6,21 +6,18 @@ RSS_URL = "https://www.karmasandhan.com/feed/"
 
 posts = get_latest_posts(RSS_URL, limit=1)
 
-print("Posts:", len(posts))
+print("Posts Found:", len(posts))
 
-if len(posts) == 0:
-    raise Exception("RSS returned no posts.")
+if not posts:
+    raise Exception("RSS Feed returned no posts.")
 
 post = posts[0]
 
 print("Title:", post["title"])
-print("Fetching article...")
 
 content = get_article_content(post["link"])
 
-print("Article Length:", len(content))
-
-print("Rewriting article...")
+print("Content Length:", len(content))
 
 article = rewrite_article(post["title"], content)
 
