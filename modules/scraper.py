@@ -58,7 +58,7 @@ def get_article_content(url):
 
             response.raise_for_status()
 
-            soup = BeautifulSoup(response.text, "lxml")
+            soup = BeautifulSoup(response.text, "html.parser")
 
             # Remove unwanted tags
             for tag in soup(["script", "style", "noscript", "iframe"]):
