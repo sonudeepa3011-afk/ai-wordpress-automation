@@ -1,27 +1,16 @@
-import os
-import requests
+from modules.rss import get_latest_posts
 
-wp_url = os.getenv("WP_URL")
-wp_user = os.getenv("WP_USERNAME")
-wp_pass = os.getenv("WP_APP_PASSWORD")
+RSS_FEEDS = [
+    "https://www.karmasandhan.com/feed/",
+]
 
-post = {
-    "title": "AI Automation Test Post",
-    "content": """
-<h2>This is a Test Draft</h2>
+for feed in RSS_FEEDS:
+    print(f"\nReading Feed: {feed}\n")
 
-<p>This draft has been created automatically from GitHub Actions.</p>
+    posts = get_latest_posts(feed)
 
-<p>If you can see this in WordPress, the connection is working perfectly.</p>
-""",
-    "status": "draft"
-}
-
-response = requests.post(
-    f"{wp_url}/wp-json/wp/v2/posts",
-    auth=(wp_user, wp_pass),
-    json=post
-)
-
-print("Status:", response.status_code)
-print(response.text)
+    for post in posts:
+        print("TITLE :", post["title"])
+        print("LINK  :", post["link"])
+        print("DATE  :", post["published"])
+        print("-" * 60)
