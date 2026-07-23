@@ -1,31 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = "https://karmasandhan.com"
+url = "https://www.karmasandhan.com"
 
 headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
 response = requests.get(url, headers=headers)
-
-print("Status:", response.status_code)
-
 soup = BeautifulSoup(response.text, "html.parser")
 
-links = soup.find_all("a")
+articles = soup.select("article")
 
-count = 0
+print("Total Articles:", len(articles))
 
-for link in links:
-    title = link.get_text(strip=True)
-    href = link.get("href")
+for article in articles[:10]:
+    a = article.find("a", href=True)
 
-    if title and href and href.startswith("http"):
-        print(title)
-        print(href)
-        print("-------------------------")
-        count += 1
-
-    if count == 10:
-        break
+    if a:
+        print("TITLE:", a.get_text(strip=True))
+        print("LINK :", a["href"])
+        print("-" * 50)
