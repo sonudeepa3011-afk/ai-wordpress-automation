@@ -12,7 +12,7 @@ RSS_FEEDS = [
     },
     {
         "name": "SarkariResult",
-        "url": "https://www.sarkariresult.com/feed/"
+        "url": "https://www.sarkariresult.com.cm/feed/"
     },
     {
         "name": "Buddy4Study",
