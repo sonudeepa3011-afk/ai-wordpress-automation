@@ -1,23 +1,12 @@
-import requests
-from bs4 import BeautifulSoup
+import feedparser
 
-url = "https://www.karmasandhan.com"
+feed_url = "https://www.karmasandhan.com/feed/"
 
-headers = {
-    "User-Agent": "Mozilla/5.0"
-}
+feed = feedparser.parse(feed_url)
 
-response = requests.get(url, headers=headers)
-soup = BeautifulSoup(response.text, "html.parser")
+print("Total Posts:", len(feed.entries))
 
-articles = soup.select("article")
-
-print("Total Articles:", len(articles))
-
-for article in articles[:10]:
-    a = article.find("a", href=True)
-
-    if a:
-        print("TITLE:", a.get_text(strip=True))
-        print("LINK :", a["href"])
-        print("-" * 50)
+for post in feed.entries[:10]:
+    print("TITLE :", post.title)
+    print("LINK  :", post.link)
+    print("-" * 50)
