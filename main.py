@@ -5,50 +5,107 @@ from modules.wordpress import create_draft
 from modules.duplicate import is_duplicate
 from modules.state import already_processed, mark_processed
 
-RSS_URL = "https://www.karmasandhan.com/feed/"
+RSS_FEEDS = [
+    {
+        "name": "Karmasandhan",
+        "url": "https://www.karmasandhan.com/feed/"
+    },
+    {
+        "name": "SarkariResult",
+        "url": "https://www.sarkariresult.com/feed/"
+    },
+    {
+        "name": "Buddy4Study",
+        "url": "https://hindi.buddy4study.com/feed/"
+    }
+]
 
-posts = get_latest_posts(RSS_URL, limit=1)
+POSTS_PER_SOURCE = 2
 
-print("Posts Found:", len(posts))
 
-for post in posts:
+def process_post(post):
 
-    print("=" * 60)
-    print("Title:", post["title"])
+    print("\n" + "=" * 60)
+    print("Source :", post["source"])
+    print("Title  :", post["title"])
 
-    # Check processed.json
+    # Already processed
     if already_processed(post["link"]):
-        print("⏭ Already Processed (State File)")
-        continue
+        print("⏭ Already Processed")
+        return
 
-    # Check WordPress
+    # Duplicate in WordPress
     if is_duplicate(post["title"]):
-        print("⏭ Duplicate in WordPress")
+        print("⏭ Duplicate Found")
         mark_processed(post["link"])
-        continue
+        return
 
     print("Fetching Article...")
+
     content = get_article_content(post["link"])
+
+    if not content:
+        print("❌ Empty Article")
+        return
 
     print("Content Length:", len(content))
 
     try:
+
         print("Rewriting with Gemini...")
-        article = rewrite_article(post["title"], content)
+
+        article = rewrite_article(
+            post["title"],
+            content
+        )
+
     except Exception as e:
+
         print("Gemini Error:", e)
-        continue
+        return
 
-    print("Creating Draft...")
+    try:
 
-    draft = create_draft(
-        post["title"],
-        article
-    )
+        print("Creating Draft...")
 
-    print("✅ Draft Created:", draft["id"])
+        draft = create_draft(
+            post["title"],
+            article
+        )
 
-    # Save processed link
-    mark_processed(post["link"])
+        print(f"✅ Draft Created : {draft['id']}")
 
-    print("✅ Saved to processed.json")
+        mark_processed(post["link"])
+
+        print("✅ Saved to processed.json")
+
+    except Exception as e:
+
+        print("WordPress Error:", e)
+
+
+def main():
+
+    total_posts = 0
+
+    for source in RSS_FEEDS:
+
+        posts = get_latest_posts(
+            source["url"],
+            limit=POSTS_PER_SOURCE,
+            source_name=source["name"]
+        )
+
+        total_posts += len(posts)
+
+        for post in posts:
+            process_post(post)
+
+    print("\n" + "=" * 60)
+    print(f"Automation Finished")
+    print(f"Total Posts Fetched : {total_posts}")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
